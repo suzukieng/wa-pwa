@@ -7,6 +7,7 @@ export default defineConfig({
     minify: false,
     cssMinify: false
   },
+  base: '/wa-pwa/',
   plugins: [VitePWA({
     registerType: 'prompt',
     injectRegister: false,
