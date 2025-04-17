@@ -48,7 +48,7 @@ async function getBeepBuffer(audioCtx: AudioContext): Promise<AudioBuffer | unde
 
 async function doBeep() {
     const audioCtx = await ensureAudioContext();
-    console.log(`Audio context state is: ${audioCtx}`);
+    console.log(`Audio context state is: ${audioCtx.state}`);
     updateAudioContextStateLabel(audioCtx.state);
     const bufferSource = audioCtx.createBufferSource();
     const audioBuffer = await getBeepBuffer(audioCtx);
@@ -64,19 +64,21 @@ async function doBeep() {
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'hidden') {
         setTimeout(() => {
-            console.log(`Resuming audio context after document visibility state: ${document.visibilityState}`);
             updateAudioContextStateLabel(_audioCtx?.state ?? '<null>');
-            _audioCtx?.resume()
-                .then(() => {
-                    updateAudioContextStateLabel(_audioCtx?.state ?? '<null>');
-                })
-                .catch((err) => {
-                    alert(`AudioContext resume failed after document became visible: ${err}`);
-                });
         }, 100);
     }
 }, false);
 
 document.getElementById('beep-button')?.addEventListener('click', () => doBeep());
-
+document.getElementById('resume-button')?.addEventListener('click', () => {
+    _audioCtx?.resume()
+        .then(() => {
+            console.log(`Resume succeeded, context state is: ${_audioCtx.state}`);
+            updateAudioContextStateLabel(_audioCtx?.state ?? '<null>');
+        })
+        .catch((err) => {
+            alert(`AudioContext resume failed: ${err}`);
+            updateAudioContextStateLabel(_audioCtx?.state ?? '<null>');
+        });
+})
 updateAudioContextStateLabel('initial');
