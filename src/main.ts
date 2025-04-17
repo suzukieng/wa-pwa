@@ -73,7 +73,7 @@ document.getElementById('beep-button')?.addEventListener('click', () => doBeep()
 document.getElementById('resume-button')?.addEventListener('click', () => {
     _audioCtx?.resume()
         .then(() => {
-            console.log(`Resume succeeded, context state is: ${_audioCtx.state}`);
+            console.log(`Resume succeeded, context state is: ${_audioCtx?.state}`);
             updateAudioContextStateLabel(_audioCtx?.state ?? '<null>');
         })
         .catch((err) => {
