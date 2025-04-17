@@ -41,6 +41,11 @@ async function getBeepBuffer(audioCtx: AudioContext): Promise<AudioBuffer | unde
 async function doBeep() {
     const audioCtx = await ensureAudioContext();
     console.log(`Audio context state is: ${audioCtx}`);
+
+    const audioCtxStateLabel = document.getElementById('audio-ctx-state');
+    if (audioCtxStateLabel) {
+        audioCtxStateLabel.innerHTML = audioCtx.state;
+    }
     const bufferSource = audioCtx.createBufferSource();
     const audioBuffer = await getBeepBuffer(audioCtx);
     if (audioBuffer) {
