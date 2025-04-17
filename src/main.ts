@@ -17,6 +17,14 @@ let _audioCtx: AudioContext | undefined = undefined;
 let _beepBuffer: AudioBuffer | undefined = undefined;
 
 
+function updateAudioContextStateLabel(text: string) {
+    const audioCtxStateLabel = document.getElementById('audio-ctx-state');
+    if (audioCtxStateLabel) {
+        audioCtxStateLabel.innerText = text;
+    }
+}
+
+
 async function ensureAudioContext() {
     if (!_audioCtx) {
         _audioCtx = new AudioContext({latencyHint: 'interactive'});
@@ -41,11 +49,7 @@ async function getBeepBuffer(audioCtx: AudioContext): Promise<AudioBuffer | unde
 async function doBeep() {
     const audioCtx = await ensureAudioContext();
     console.log(`Audio context state is: ${audioCtx}`);
-
-    const audioCtxStateLabel = document.getElementById('audio-ctx-state');
-    if (audioCtxStateLabel) {
-        audioCtxStateLabel.innerHTML = audioCtx.state;
-    }
+    updateAudioContextStateLabel(audioCtx.state);
     const bufferSource = audioCtx.createBufferSource();
     const audioBuffer = await getBeepBuffer(audioCtx);
     if (audioBuffer) {
@@ -61,9 +65,18 @@ document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'hidden') {
         setTimeout(() => {
             console.log(`Resuming audio context after document visibility state: ${document.visibilityState}`);
-            _audioCtx?.resume();
+            updateAudioContextStateLabel(_audioCtx?.state ?? '<null>');
+            _audioCtx?.resume()
+                .then(() => {
+                    updateAudioContextStateLabel(_audioCtx?.state ?? '<null>');
+                })
+                .catch((err) => {
+                    alert(`AudioContext resume failed after document became visible: ${err}`);
+                });
         }, 100);
     }
 }, false);
 
 document.getElementById('beep-button')?.addEventListener('click', () => doBeep());
+
+updateAudioContextStateLabel('initial');
