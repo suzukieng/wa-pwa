@@ -29,7 +29,8 @@ async function ensureAudioContext() {
     if (!_audioCtx) {
         _audioCtx = new AudioContext({latencyHint: 'interactive'});
         _audioCtx.addEventListener('statechange', () => {
-            console.log(`AudioContext state is now: ${_audioCtx?.state}`);
+            const msg = `state change: ${_audioCtx?.state}`;
+            updateAudioContextStateLabel(msg);
         });
     }
     return _audioCtx;
@@ -48,8 +49,6 @@ async function getBeepBuffer(audioCtx: AudioContext): Promise<AudioBuffer | unde
 
 async function doBeep() {
     const audioCtx = await ensureAudioContext();
-    console.log(`Audio context state is: ${audioCtx.state}`);
-    updateAudioContextStateLabel(audioCtx.state);
     const bufferSource = audioCtx.createBufferSource();
     const audioBuffer = await getBeepBuffer(audioCtx);
     if (audioBuffer) {
@@ -64,7 +63,8 @@ async function doBeep() {
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'hidden') {
         setTimeout(() => {
-            updateAudioContextStateLabel(_audioCtx?.state ?? '<null>');
+            const msg = `state after visible: ${_audioCtx?.state}`;
+            updateAudioContextStateLabel(msg);
         }, 100);
     }
 }, false);
@@ -73,12 +73,12 @@ document.getElementById('beep-button')?.addEventListener('click', () => doBeep()
 document.getElementById('resume-button')?.addEventListener('click', () => {
     _audioCtx?.resume()
         .then(() => {
-            console.log(`Resume succeeded, context state is: ${_audioCtx?.state}`);
-            updateAudioContextStateLabel(_audioCtx?.state ?? '<null>');
+            const msg = `resume() succeeded, state now: ${_audioCtx?.state}`;
+            updateAudioContextStateLabel(msg);
         })
         .catch((err) => {
-            alert(`AudioContext resume failed: ${err}`);
-            updateAudioContextStateLabel(_audioCtx?.state ?? '<null>');
+            const msg = `resume() failed: ${err}, state now: ${_audioCtx?.state}`;
+            updateAudioContextStateLabel(msg);
         });
 })
 updateAudioContextStateLabel('initial');
