@@ -17,6 +17,14 @@ let _audioCtx: AudioContext | undefined = undefined;
 let _beepBuffer: AudioBuffer | undefined = undefined;
 
 
+function addLogEntry(text: string) {
+    const templateNode = document.querySelector('#log-entry-template') as HTMLTemplateElement;
+    const logEntryNode = templateNode.content.cloneNode(true) as HTMLElement;
+    logEntryNode.querySelector('.timestamp')!.textContent = new Date().toLocaleString();
+    logEntryNode.querySelector('.text')!.textContent = text;
+    document.getElementById('logs')?.appendChild(logEntryNode);
+}
+
 function updateAudioContextStateLabel(text: string) {
     const audioCtxStateLabel = document.getElementById('audio-ctx-state');
     if (audioCtxStateLabel) {
@@ -24,13 +32,17 @@ function updateAudioContextStateLabel(text: string) {
     }
 }
 
+function updateUserActivationLabel() {
+    const hasBeenActive = navigator.userActivation.hasBeenActive;
+    document.querySelector('#has-been-active')!.innerHTML = hasBeenActive ? 'yes' : 'no';
+}
 
 async function ensureAudioContext() {
     if (!_audioCtx) {
         _audioCtx = new AudioContext({latencyHint: 'interactive'});
         _audioCtx.addEventListener('statechange', () => {
-            const msg = `state change: ${_audioCtx?.state}`;
-            updateAudioContextStateLabel(msg);
+            updateAudioContextStateLabel(`state change: ${_audioCtx?.state}`);
+            addLogEntry(`AC state changed to ${_audioCtx?.state}`);
         });
     }
     return _audioCtx;
@@ -61,24 +73,54 @@ async function doBeep() {
 }
 
 document.addEventListener('visibilitychange', () => {
+    addLogEntry(`visibilitychange: ${document.visibilityState}`);
     if (document.visibilityState !== 'hidden') {
         setTimeout(() => {
-            const msg = `state after visible: ${_audioCtx?.state}`;
+            updateUserActivationLabel();
+            const msg = `after visibilityState(${document.visibilityState}): ${_audioCtx?.state}`;
             updateAudioContextStateLabel(msg);
         }, 100);
     }
 }, false);
 
-document.getElementById('beep-button')?.addEventListener('click', () => doBeep());
+document.getElementById('beep-button')?.addEventListener('click', async () => {
+    try {
+        await doBeep();
+        addLogEntry(`doBeep() succeeded`);
+    } catch (e) {
+        addLogEntry(`doBeep() failed: ${e}`);
+    }
+    updateUserActivationLabel();
+});
+
+document.getElementById('beep-delayed-button')?.addEventListener('click', () => {
+    setTimeout(async () => {
+        try {
+            await doBeep();
+            addLogEntry(`doBeep() succeeded`);
+        } catch (e) {
+            addLogEntry(`doBeep() failed: ${e}`);
+        }
+    }, 2500);
+    updateUserActivationLabel();
+})
+
 document.getElementById('resume-button')?.addEventListener('click', () => {
     _audioCtx?.resume()
         .then(() => {
             const msg = `resume() succeeded, state now: ${_audioCtx?.state}`;
             updateAudioContextStateLabel(msg);
+            updateUserActivationLabel();
+            addLogEntry(`AC resume() succeeded`);
         })
         .catch((err) => {
             const msg = `resume() failed: ${err}, state now: ${_audioCtx?.state}`;
             updateAudioContextStateLabel(msg);
+            updateUserActivationLabel();
+            addLogEntry(`AC resume() failed: ${err}`);
         });
 })
+
 updateAudioContextStateLabel('initial');
+updateUserActivationLabel();
+addLogEntry('Initial load');

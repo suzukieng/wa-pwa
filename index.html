@@ -8,19 +8,42 @@
 </head>
 <body>
 
-<p>AudioContext state: <span id="audio-ctx-state"></span></p>
-<button id="resume-button">Resume Context</button>
-<button id="beep-button">Play Beep</button>
-
-<div id="pwa-toast" role="alert" aria-labelledby="toast-message">
-    <div class="message">
-        <span id="toast-message"></span>
+<div id="app">
+    <div>
+        <h2>UserActivation</h2>
+        <p>UserActivation.hasBeenActive: <span id="has-been-active"></span></p>
     </div>
-    <div class="buttons">
-        <button id="pwa-refresh" type="button">Reload</button>
-        <button id="pwa-close" type="button">Close</button>
+
+    <div>
+        <h2>AudioContext</h2>
+        <p>State: <span id="audio-ctx-state"></span></p>
+        <button id="resume-button">Resume Context</button>
+        <button id="beep-button">Play Beep</button>
+        <button id="beep-delayed-button">Play Delayed Beep</button>
+    </div>
+
+    <div id="logs">
+        <h2>Log Entries</h2>
+    </div>
+
+    <template id="log-entry-template">
+        <div class="log-entry">
+            <span class="timestamp"></span>
+            <span class="text"></span>
+        </div>
+    </template>
+
+    <div id="pwa-toast" role="alert" aria-labelledby="toast-message">
+        <div class="message">
+            <span id="toast-message"></span>
+        </div>
+        <div class="buttons">
+            <button id="pwa-refresh" type="button">Reload</button>
+            <button id="pwa-close" type="button">Close</button>
+        </div>
     </div>
 </div>
+
 
 <script type="module" src="/src/main.ts"></script>
 </body>
