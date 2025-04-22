@@ -10,7 +10,6 @@
 
 <div id="app">
     <div>
-        <h2>UserActivation</h2>
         <p>UserActivation.hasBeenActive: <span id="has-been-active"></span></p>
     </div>
 
@@ -19,11 +18,15 @@
         <p>State: <span id="audio-ctx-state"></span></p>
         <div>
             <button id="resume-button">Resume Context</button>
-            <button id="beep-button">Play Beep</button>
-            <button id="beep-delayed-button">Play Delayed Beep</button>
+            <button id="recreate-button">Re-create Context</button>
         </div>
+    </div>
+
+    <div>
+        <h2>Playback</h2>
         <div>
-            <button id="audio-element-button">Play HTML5 AudioElement</button>
+            <button id="beep-button">WebAudio Beep</button>
+            <button id="audio-element-button">HTML5 Audio Beep</button>
         </div>
     </div>
 

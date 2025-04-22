@@ -21,18 +21,10 @@ let _beepBuffer: AudioBuffer | undefined = undefined;
 // HTML5 audio element fallback
 let _audioElem: HTMLAudioElement | undefined = undefined;
 
-function getAudioElem(): HTMLAudioElement {
-    if (!_audioElem) {
-        _audioElem = new Audio(_BEEP_DATA_URL);
-    }
-    return _audioElem;
-}
-
-
 function addLogEntry(text: string) {
     const templateNode = document.querySelector('#log-entry-template') as HTMLTemplateElement;
     const logEntryNode = templateNode.content.cloneNode(true) as HTMLElement;
-    logEntryNode.querySelector('.timestamp')!.textContent = new Date().toLocaleString();
+    logEntryNode.querySelector('.timestamp')!.textContent = new Date().toLocaleTimeString();
     logEntryNode.querySelector('.text')!.textContent = text;
     document.getElementById('logs')?.appendChild(logEntryNode);
 }
@@ -49,13 +41,24 @@ function updateUserActivationLabel() {
     document.querySelector('#has-been-active')!.innerHTML = hasBeenActive ? 'yes' : 'no';
 }
 
-async function ensureAudioContext() {
-    if (!_audioCtx) {
-        _audioCtx = new AudioContext({latencyHint: 'interactive'});
-        _audioCtx.addEventListener('statechange', () => {
-            updateAudioContextStateLabel(`state change: ${_audioCtx?.state}`);
-            addLogEntry(`AC state changed to ${_audioCtx?.state}`);
-        });
+// invoked when the AudioContext's state property changes, log the change and update the label
+const audioContextStateChangeListener = () => {
+    updateAudioContextStateLabel(`state change: ${_audioCtx?.state}`);
+    addLogEntry(`AC state changed to ${_audioCtx?.state}`);
+}
+
+async function ensureAudioContext(create: boolean) {
+    if (!_audioCtx || create) {
+
+        // release old context, if we're recreating one
+        if (_audioCtx) {
+            _audioCtx.removeEventListener('statechange', audioContextStateChangeListener);
+            await _audioCtx.close();
+        }
+
+        _audioCtx = new AudioContext();
+        _audioCtx.addEventListener('statechange', audioContextStateChangeListener);
+        addLogEntry(`New AC created`);
     }
     return _audioCtx;
 }
@@ -72,7 +75,7 @@ async function getBeepBuffer(audioCtx: AudioContext): Promise<AudioBuffer | unde
 }
 
 async function doBeep() {
-    const audioCtx = await ensureAudioContext();
+    const audioCtx = await ensureAudioContext(false);
     const bufferSource = audioCtx.createBufferSource();
     const audioBuffer = await getBeepBuffer(audioCtx);
     if (audioBuffer) {
@@ -82,6 +85,13 @@ async function doBeep() {
     } else {
         alert(`No audio buffer`);
     }
+}
+
+function getAudioElem(): HTMLAudioElement {
+    if (!_audioElem) {
+        _audioElem = new Audio(_BEEP_DATA_URL);
+    }
+    return _audioElem;
 }
 
 async function doAudioElementBeep() {
@@ -117,18 +127,6 @@ document.getElementById('beep-button')?.addEventListener('click', async () => {
     updateUserActivationLabel();
 });
 
-document.getElementById('beep-delayed-button')?.addEventListener('click', () => {
-    setTimeout(async () => {
-        try {
-            await doBeep();
-            addLogEntry(`doBeep() succeeded`);
-        } catch (e) {
-            addLogEntry(`doBeep() failed: ${e}`);
-        }
-    }, 2500);
-    updateUserActivationLabel();
-});
-
 document.getElementById('resume-button')?.addEventListener('click', () => {
     _audioCtx?.resume()
         .then(() => {
@@ -143,8 +141,13 @@ document.getElementById('resume-button')?.addEventListener('click', () => {
             updateUserActivationLabel();
             addLogEntry(`AC resume() failed: ${err}`);
         });
-})
+});
 
+document.getElementById('recreate-button')?.addEventListener('click', async () => {
+    await ensureAudioContext(true);
+    updateAudioContextStateLabel(`after recreate: ${_audioCtx?.state}`);
+    updateUserActivationLabel();
+})
 
 document.getElementById('audio-element-button')?.addEventListener('click', () => {
     doAudioElementBeep();
@@ -153,4 +156,3 @@ document.getElementById('audio-element-button')?.addEventListener('click', () =>
 
 updateAudioContextStateLabel('initial');
 updateUserActivationLabel();
-addLogEntry('Initial load');
