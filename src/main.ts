@@ -76,14 +76,30 @@ async function getBeepBuffer(audioCtx: AudioContext): Promise<AudioBuffer | unde
 
 async function doBeep() {
     const audioCtx = await ensureAudioContext(false);
-    const bufferSource = audioCtx.createBufferSource();
-    const audioBuffer = await getBeepBuffer(audioCtx);
-    if (audioBuffer) {
-        bufferSource.buffer = audioBuffer;
-        bufferSource.connect(audioCtx.destination);
-        bufferSource.start();
+
+    const playBuffer = async (audioCtx: AudioContext) => {
+        const bufferSource = audioCtx.createBufferSource();
+        const audioBuffer = await getBeepBuffer(audioCtx);
+        if (audioBuffer) {
+            bufferSource.buffer = audioBuffer;
+            bufferSource.connect(audioCtx.destination);
+            bufferSource.start();
+        } else {
+            alert(`No audio buffer`);
+        }
+    };
+
+    // @ts-ignore: 'interrupted' only exists in iOS Safari
+    if (audioCtx.state === 'interrupted') {
+        // see: https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/state#resuming_interrupted_play_states_in_ios_safari
+        try {
+            await audioCtx.resume();
+            await playBuffer(audioCtx);
+        } catch (e) {
+            alert(`Failed to resume interrupted AudioContext: ${e}`);
+        }
     } else {
-        alert(`No audio buffer`);
+        await playBuffer(audioCtx);
     }
 }
 
